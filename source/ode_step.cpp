@@ -16,9 +16,10 @@ ode_step::ode_step(double dt_,function<void(const vector<double>&,vector<double>
 vector<double> ode_step::operator()(vector<double> a, vector<double> b) {
   using namespace boost::numeric::odeint;
   vector<double> current(a);
-  //boost::copy(current, ostream_iterator<double> (cout, " ")); cout << "** ";
+  //boost::copy(current, ostream_iterator<double> (cout, " ")); cout << "\n";
   integrate(eom, current, a[0],a[0]+dt,dt*1e-3);
   //boost::copy(current, ostream_iterator<double> (cout, " ")); cout << "\n";
+  //cout << "**\n";
   current[0]+=dt;
   current.back()=ham(current);
   return current;

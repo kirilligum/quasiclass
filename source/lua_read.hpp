@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
+#include <string>
 #include <lua.hpp>
 //#include "/global/home/users/kigumen/modules/lua/5.2.1/include/lua.hpp"
 //#include "/global/home/users/kigumen/modules/lua/5.1.5/include/lua.hpp"
