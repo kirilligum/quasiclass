@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <map>
-#include <tuple>
+//#include <tuple>
 #include <algorithm>
 #include <iostream>
 #include <boost/range/algorithm.hpp>
@@ -21,6 +21,36 @@ auto zip_range(const T&... containers) -> boost::iterator_range<boost::zip_itera
     auto zip_end = boost::make_zip_iterator(boost::make_tuple(std::end(containers)...));
     return boost::make_iterator_range(zip_begin, zip_end);
 }
+
+struct time_step {
+  double dt;
+  std::vector<double> operator()(std::vector<double> old_state) {
+    return old_state;
+  }
+};
+
+std::vector<double> el_pop( std::vector<std::vector<double>> states) {
+  return states.front();
+}
+
+std::vector<double> ave_over_states( std::vector<std::vector<double>> states) {
+  return states.front();
+}
+
+std::vector<std::vector<double>> trajs_step( std::vector<std::vector<double>> states, double dt) {
+  return states;
+}
+
+struct avs {
+  std::vector<std::vector<double>> states;
+  double dt;
+  boost::tuple<std::vector<double>,std::vector<double>> operator()(double t) {
+    std::vector<double> ave_state = ave_over_states(states);
+    std::vector<double> ave_nn = el_pop(states);
+    states = trajs_step(states, dt); ///> step
+    return boost::make_tuple(ave_state,ave_nn);
+  }
+};
 
 std::tuple<
   std::vector<std::vector<double>> ,
@@ -47,12 +77,11 @@ ave_dynamics(
   copy(irange(0,static_cast<int>(tp["n_times"])) | transformed( [dt](double itime ){return itime*dt;}),back_inserter(time));
   int nt = tp["n_times"];
   vector<vector<double>> ave_observes,ave_state(time.size()),ave_nn(time.size());
-  transform(
-      time, 
-      make_zip_iterator(
-        boost::make_tuple(begin(ave_state),begin(ave_nn))
-        ), 
-      [](double t) {return boost::make_tuple(vd(2,t),vd(2,0));});
+  transform( time, make_zip_iterator( boost::make_tuple(begin(ave_state),begin(ave_nn))), 
+      avs{states,dt}
+      );
+      //[](double t) {
+      //return boost::make_tuple(vd(2,t),vd(2,0));});
   for(auto i:time) cout << i << "   " ;
   cout <<"\n";
   for(auto i:ave_observes) { for(auto j:i) { cout << j<< "  ";} cout << "\n";}
