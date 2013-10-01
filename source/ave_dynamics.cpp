@@ -14,40 +14,30 @@
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/range.hpp>
 
-template <typename... T>
-auto zip_range(const T&... containers) -> boost::iterator_range<boost::zip_iterator<decltype(boost::make_tuple(std::begin(containers)...))>>
-{
-    auto zip_begin = boost::make_zip_iterator(boost::make_tuple(std::begin(containers)...));
-    auto zip_end = boost::make_zip_iterator(boost::make_tuple(std::end(containers)...));
-    return boost::make_iterator_range(zip_begin, zip_end);
-}
+#include <boost/numeric/odeint.hpp>
 
-struct time_step {
-  double dt;
-  std::vector<double> operator()(std::vector<double> old_state) {
-    return old_state;
-  }
-};
+#include "pcet.hpp"
+#include "traj_step.hpp"
+#include "ave_over_states.hpp"
+
 
 std::vector<double> el_pop( std::vector<std::vector<double>> states) {
   return states.front();
 }
 
-std::vector<double> ave_over_states( std::vector<std::vector<double>> states) {
-  return states.front();
-}
-
-std::vector<std::vector<double>> trajs_step( std::vector<std::vector<double>> states, double dt) {
-  return states;
+void trajs_step( std::vector<std::vector<double>> &states, 
+    function<void(std::vector<double>&)> my_traj_step
+    ) {
+  boost::for_each(states,my_traj_step);
 }
 
 struct avs {
   std::vector<std::vector<double>> states;
-  double dt;
+  function<void(std::vector<double>&)> my_traj_step;
   boost::tuple<std::vector<double>,std::vector<double>> operator()(double t) {
     std::vector<double> ave_state = ave_over_states(states);
     std::vector<double> ave_nn = el_pop(states);
-    states = trajs_step(states, dt); ///> step
+    trajs_step(states, my_traj_step); ///> step
     return boost::make_tuple(ave_state,ave_nn);
   }
 };
@@ -71,14 +61,19 @@ ave_dynamics(
   using namespace boost;
   using namespace boost::adaptors;
   typedef vector<double> vd; typedef vector<vector<double>> vvd; typedef vector<vector<vector<double>>> vvvd;
+
+  auto my_energy = pcet(sp,wb,cb);
+  auto my_eom = eom(d_pcet(sp,wb,cb));
+  double dt = tp["time_step"];
+  auto my_traj_step = traj_step{dt,my_energy,my_eom};
+
   vvd ave_traj, ave_n;
   vector<double>  time;
-  double dt = tp["time_step"];
   copy(irange(0,static_cast<int>(tp["n_times"])) | transformed( [dt](double itime ){return itime*dt;}),back_inserter(time));
   int nt = tp["n_times"];
   vector<vector<double>> ave_observes,ave_state(time.size()),ave_nn(time.size());
   transform( time, make_zip_iterator( boost::make_tuple(begin(ave_state),begin(ave_nn))), 
-      avs{states,dt}
+      avs{states,my_traj_step}
       );
       //[](double t) {
       //return boost::make_tuple(vd(2,t),vd(2,0));});

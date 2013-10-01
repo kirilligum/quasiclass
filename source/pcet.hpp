@@ -2,11 +2,11 @@
 #include <map>
 using namespace std;
 
-double n_fromx(double p, double x) {
+inline double n_fromx(double p, double x) {
   return 0.5*(x*x+p*p-1.);
 }
 
-double q_fromx(double p, double x) {
+inline double q_fromx(double p, double x) {
   return atan2(p,x);
 }
 
@@ -234,7 +234,7 @@ struct dfdx {
   }
 };
 
-vector<double> dfdv_n (function<double(vector<double>)> f, vector<double> &v, double h) { ///> can be modified to a structure and make an option with a copy of v
+inline vector<double> dfdv_n (function<double(vector<double>)> f, vector<double> &v, double h) { ///> can be modified to a structure and make an option with a copy of v
   vector<double> vp(v);
   boost::for_each(vp,[h](double x) { return x+=h;});
   vector<double> vm(v);
@@ -252,7 +252,7 @@ vector<double> dfdv_n (function<double(vector<double>)> f, vector<double> &v, do
   return fv;
 }
 
-double dfdv_n (function<double(vector<double>)> f, vector<double> &v, int i, double h) { ///> can be modified to a structure and make an option with a copy of v
+inline double dfdv_n (function<double(vector<double>)> f, vector<double> &v, int i, double h) { ///> can be modified to a structure and make an option with a copy of v
   vector<double> vp(v);
   boost::for_each(vp,[h](double x) { return x+=h;});
   vector<double> vm(v);
@@ -270,7 +270,7 @@ double dfdv_n (function<double(vector<double>)> f, vector<double> &v, int i, dou
   return fv[i];
 }
 
-vector<double> dfdv_n (function<double(vector<double>)> f, const vector<double> &cv, double h) { ///> can be modified to a structure and make an option with a copy of v
+inline vector<double> dfdv_n (function<double(vector<double>)> f, const vector<double> &cv, double h) { ///> can be modified to a structure and make an option with a copy of v
   auto v = cv;
   return dfdv_n(f,v,h);
 }
