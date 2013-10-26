@@ -4,6 +4,8 @@
 
 using namespace std;
 
+void o(vector<vector<double>> vvd) ;
+
 void o(vector<vector<double>> vvd, string ofn) ;
 
 void o(vector<double> v, string ofn) ;

@@ -13,5 +13,7 @@ ave_dynamics(
   std::vector<double> cb,
   std::vector<std::vector<double>> states,
   std::map<std::string,double> sp,
-  std::map<std::string,double> tp
+  std::map<std::string,double> tp,
+  std::map<std::string,double> ip,
+  std::map<std::string,double> mp
     ) ;

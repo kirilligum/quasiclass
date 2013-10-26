@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <limits>
 #include <tuple>
+#include <mpi.h>
 //#include <boost/range/algorithm.hpp>
 //#include <boost/range/algorithm_ext.hpp>
 //#include <boost/range/numeric.hpp>
@@ -29,26 +30,21 @@ using namespace std;
 using namespace std::placeholders;
 
 int main(int argc, const char *argv[]) {
+  MPI_Init(nullptr,nullptr);
   using namespace std; 
   typedef vector<double> vd; typedef vector<vector<double>> vvd; typedef vector<vector<vector<double>>> vvvd;
 
-  cout << "Reading parameters from " << argv[1] << " into the pro and into param.dat ... \n";
+  //cout << "Reading parameters from " << argv[1] << " into the pro and into param.dat ... \n";
   map<string,double> sp,ip,tp,mp;
   tie(sp,ip,tp,mp)=get_param(argv[1]);
 
-  cout << "Preparing initial states and bath ... \n";
+  //cout << "Preparing initial states and bath ... \n";
   vector<double> wb,cb;
   vector<vector<double>> states(mp.at("n_trajs"));
   tie(wb,cb,states) = prepare_states_bath(sp,mp,ip);
 
-  //vector<double> dich;
-  //transform(states.begin(),states.end(),back_inserter(dich),[](vector<double>v){return (v[1]);});
-  //sort(dich.begin(),dich.end());
-  //ofstream of("dich.dat");
-  //for(auto i:dich) of<<i<<"\n";
-
   vvd ave_traj, ave_n;
-  tie(ave_traj,ave_n) = ave_dynamics(wb,cb,states,sp,tp);
+  tie(ave_traj,ave_n) = ave_dynamics(wb,cb,states,sp,tp,ip,mp);
 
   //cout << "Integrating trajectories \n";
   //vector<vector<vector<double>>> trajs;
@@ -65,5 +61,7 @@ int main(int argc, const char *argv[]) {
   //auto el_pop = electronic_population(trajs,ip.at("n1"),ip.at("n2"),mp.at("bin_end"),mp.at("n_shift"));
   //o(el_pop ,"el_pop.dat");
   
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
   return 0;
 }

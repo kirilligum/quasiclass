@@ -8,6 +8,10 @@
 
 using namespace std;
 
+
+void o(vector<vector<double>> vvd) {
+  for(auto i: vvd) { boost::copy(i, ostream_iterator<double>(cout<<fixed," ")); cout <<"\n";}
+}
 void o(vector<vector<double>> vvd, string ofn) {
   ofstream of(ofn);
   for(auto i: vvd) { boost::copy(i, ostream_iterator<double>(of<<fixed," ")); of <<"\n";}

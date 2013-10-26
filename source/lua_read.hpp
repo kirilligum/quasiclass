@@ -9,7 +9,11 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <lua.hpp>
+//#include <lua.hpp>
+#include "/global/homes/k/kirillig/modules/lua/5.2.2/include/lua.hpp"
+#include "/global/homes/k/kirillig/modules/lua/5.2.2/include/lua.h"
+#include "/global/homes/k/kirillig/modules/lua/5.2.2/include/lauxlib.h"
+#include "/global/homes/k/kirillig/modules/lua/5.2.2/include/lualib.h"
 //#include "/global/home/users/kigumen/modules/lua/5.2.1/include/lua.hpp"
 //#include "/global/home/users/kigumen/modules/lua/5.1.5/include/lua.hpp"
 //extern "C" { 
@@ -40,7 +44,8 @@ public:
     return ret;
   }
   Lua_read(const char *lua_config_filename) {
-    ls = lua_open();
+    //ls = lua_open();
+    ls = luaL_newstate();
     luaL_openlibs(ls);
     if (luaL_loadfile(ls, lua_config_filename) || lua_pcall(ls, 0,0,0)) {
       cout << "error: " << lua_tostring(ls,-1) << "\n";

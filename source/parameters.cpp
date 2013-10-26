@@ -11,11 +11,13 @@ std::tuple<
   std::map<std::string,double>
 > 
 get_param(const char *lua_config_filename) {
-using namespace std;
-  std::vector<std::map<std::string,double>> ret;
+  using namespace std;
 
   ofstream ofpara("param.dat");
 
+  //map<string,double> sp,ip,tp,mp;
+
+  //sp = Lua_read(lua_config_filename).read_config(vector<string>{});
   auto sp = Lua_read(lua_config_filename).read_config(vector<string>{"m","e1","e2","w1","w2","rp1","rp2","v12","eta","hbar","w_c","dw","n_modes","n_shift","boltzmann_constant","beta"});
   ofpara << "map of system's parameters: \n"; for(auto i: sp) ofpara<< setw(20) << i.first << " = " << i.second << "\n";
   

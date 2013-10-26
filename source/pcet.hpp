@@ -1,5 +1,18 @@
 #pragma once
+#include <vector>
 #include <map>
+//#include <tuple>
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm_ext.hpp>
+#include <boost/range/numeric.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/irange.hpp>
+
+#include <boost/iterator/zip_iterator.hpp>
+#include <boost/range.hpp>
 using namespace std;
 
 inline double n_fromx(double p, double x) {
@@ -48,18 +61,49 @@ struct pcet {
       //2.0 * v12 * sqrt((0.5*(x1*x1+p1*p1-1.)+0.5)*(0.5*(x2*x2+p2*p2-1.)+0.5)) *
         //cos(atan2(p1,x1)-atan2(p2,x2));
 
-    double  sum_hamc =0;
+    //double  sum_hamc =0;
+    //for (size_t i = 0; i < bw.size(); ++i) {
+      //auto pb = s[7+2*i];
+      //auto qb = s[8+2*i];
+      //sum_hamc+= 
+        //pow(pb,2)/2. + 
+        //(pow(bw[i],2)*
+         //pow(qb + (bc[i]*(-ns + pow(p1,2) + pow(x1,2)))/(2.*pow(bw[i],2)),2)
+         //)/2.;
+    //}
+    //auto ham = (0.5*pow(p,2))/m + 
+      //0.5*(e1 + 0.5*m*pow(r - rp1,2)*pow(w1,2))*(-ns + pow(p1,2) + pow(x1,2)) + 
+      //sum_hamc +
+      //0.5*(e2 + 0.5*m*pow(r - rp2,2)*pow(w2,2))*(-ns + pow(p2,2) + pow(x2,2)) + 
+      //2.*v12*(p1*p2 + x1*x2)*
+        //sqrt(
+            //(0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*
+            //(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))))
+        //+
+      //0.0
+      ;
+    //double p1 = s[1];
+    //double x1 = s[2];
+    //double p2 = s[3];
+    //double x2 = s[4];
+    
+    auto nnd2 = 0.5*(x1*x1 + p1*p1 - x2*x2 - p2*p2);
+
+    auto ecoup = v12*(x1*x2 + p1*p2);
+
+    double bath_ham=0;
+    double ebath_coup=0;
     for (size_t i = 0; i < bw.size(); ++i) {
       auto pb = s[7+2*i];
       auto qb = s[8+2*i];
-      sum_hamc+= 
-        pow(pb,2)/2. + 
-        (pow(bw[i],2)*pow(qb + (bc[i]*(-ns + pow(p1,2) + pow(x1,2)))/(2.*pow(bw[i],2)),2))/2.;
+      bath_ham+= pb*pb + bw[i]*bw[i]*qb*qb;
+      ebath_coup+= bc[i]*qb;
     }
-    auto ham = (0.5*pow(p,2))/m + 
-      0.5*(e1 + 0.5*m*pow(r - rp1,2)*pow(w1,2))*(-ns + pow(p1,2) + pow(x1,2)) + 
-      sum_hamc +
-   0.5*(e2 + 0.5*m*pow(r - rp2,2)*pow(w2,2))*(-ns + pow(p2,2) + pow(x2,2)) + 2.*v12*(p1*p2 + x1*x2)*sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))));
+    bath_ham*=0.5;
+    ebath_coup*=nnd2;
+
+    //return (ecoup);
+    auto ham = (bath_ham + ebath_coup + ecoup); // may be - ebath_coup
 
     //auto sys_ham = p*p*0.5 + r*r*0.5;
     //auto sys_ham = p*p*0.5/m + (e1+u1(r))*n1 + (e2+u2(r))*n2;
@@ -86,137 +130,7 @@ struct pcet {
 
 struct d_pcet : pcet {
   using pcet::pcet;
-  vector<double> operator() (const vector<double> &s) {
-    vector<double> ds(s.size());
-    double p = s[1];
-    double r = s[2];
-    double p1 = s[3];
-    double x1 = s[4];
-    double p2 = s[5];
-    double x2 = s[6];
-
-    double sum_dp1c = 0, sum_dx1c = 0, sum_hamc =0;
-    for (size_t i = 0; i < bw.size(); ++i) {
-      auto pb = s[7+2*i];
-      auto qb = s[8+2*i];
-      auto d_sys_ham_dpb = pb;
-      auto d_sys_ham_dqb = 1.*pow(bw[i],2)*(qb + 0.5*(bc[i]*(-ns + pow(p1,2) + pow(x1,2)))/pow(bw[i],2));
-      ds[7+2*i] = d_sys_ham_dpb;
-      ds[8+2*i] = d_sys_ham_dqb;
-      sum_dp1c+= bc[i]*p1*(qb + (bc[i]*(-ns + pow(p1,2) + pow(x1,2)))/(2.*pow(bw[i],2))) ;
-      sum_dx1c+= bc[i]*x1*(qb + (bc[i]*(-ns + pow(p1,2) + pow(x1,2)))/(2.*pow(bw[i],2))) ;
-      sum_hamc+= 
-        pow(pb,2)/2. + 
-        (pow(bw[i],2)*pow(qb + (bc[i]*(-ns + pow(p1,2) + pow(x1,2)))/(2.*pow(bw[i],2)),2))/2.;
-    }
-
-    auto ham = (0.5*pow(p,2))/m + 0.5*(e1 + 0.5*m*pow(r - rp1,2)*pow(w1,2))*(-ns + pow(p1,2) + pow(x1,2)) + 
-      sum_hamc +
-   0.5*(e2 + 0.5*m*pow(r - rp2,2)*pow(w2,2))*(-ns + pow(p2,2) + pow(x2,2)) + 2.*v12*(p1*p2 + x1*x2)*sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))));
-
-    auto d_sys_ham_dp = (1.*p)/m;
-    auto d_sys_ham_dr = 0.5*m*(r - rp1)*pow(w1,2)*(-ns + pow(p1,2) + pow(x1,2)) + 0.5*m*(r - rp2)*pow(w2,2)*(-ns + pow(p2,2) + pow(x2,2));
-    auto d_sys_ham_dp1 = 1.*p1*(e1 + 0.5*m*pow(r - rp1,2)*pow(w1,2)) + 
-      sum_dp1c +
-   (1.*p1*v12*(p1*p2 + x1*x2)*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))))/sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2)))) + 
-   2.*p2*v12*sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))));
-    auto d_sys_ham_dx1 = 1.*(e1 + 0.5*m*pow(r - rp1,2)*pow(w1,2))*x1 + 
-      sum_dx1c +
-   (1.*v12*x1*(p1*p2 + x1*x2)*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))))/sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2)))) + 
-   2.*v12*x2*sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))));
-    auto d_sys_ham_dp2 = 1.*p2*(e2 + 0.5*m*pow(r - rp2,2)*pow(w2,2)) + (1.*p2*v12*(0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(p1*p2 + x1*x2))/
-    sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2)))) + 2.*p1*v12*sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))));
-    auto d_sys_ham_dx2 = 1.*(e2 + 0.5*m*pow(r - rp2,2)*pow(w2,2))*x2 + (1.*v12*(0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*x2*(p1*p2 + x1*x2))/
-    sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2)))) + 2.*v12*x1*sqrt((0.5 + 0.5*(-ns + pow(p1,2) + pow(x1,2)))*(0.5 + 0.5*(-ns + pow(p2,2) + pow(x2,2))));
-
-    //auto sys_ham = 
-      //p*p*0.5/m 
-      //+ 
-      //(e1+m*w1*w1*(r-rp1)*(r-rp1)*0.5)*0.5*(x1*x1+p1*p1-1.) 
-      //+ 
-      //(e2+m*w2*w2*(r-rp2)*(r-rp2)*0.5)*0.5*(x2*x2+p2*p2-1.) 
-      //+
-      //2.0 * v12 * sqrt((0.5*(x1*x1+p1*p1-1.)+0.5)*(0.5*(x2*x2+p2*p2-1.)+0.5)) 
-        //*
-        //cos(atan2(p1,x1)-atan2(p2,x2))
-      //;
-
-    //auto d_sys_ham_dp = p/m ;
-    ds[1]= d_sys_ham_dp;
-
-    //auto d_sys_ham_dr =
-      //(m*w1*w1*(r-rp1))*0.5*(x1*x1+p1*p1-1.) + 
-      //(m*w2*w2*(r-rp2))*0.5*(x2*x2+p2*p2-1.)
-      //;
-    ds[2]= d_sys_ham_dr;
-
-    //auto d_sys_ham_dp1 = 
-      //p1*(e1 + 0.5*m*pow(r - rp1,2)*pow(w1,2)) + 
-       //(1.*p1*v12*(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2)))*
-          //cos(atan2(p1,x1) - atan2(p2,x2)))/
-        //sqrt((0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-          //(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2)))) + 
-       //(2.*v12*x1*sqrt((0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-            //(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2))))*
-          //sin(atan2(p1,x1) - atan2(p2,x2)))/
-        //(pow(p1,2) + pow(x1,2));
-    //for (size_t i = 0; i < bw.size(); ++i) {
-      //auto pb = s[7+2*i];
-      //auto qb = s[8+2*i];
-      //d_sys_ham_dp1 += 1.*bc[i]*p1*(qb + (0.5*bc[i]*(-1 + pow(p1,2) + pow(x1,2)))/pow(bw[i],2));
-    //}
-    ds[3] = d_sys_ham_dp1;
-
-    //auto d_sys_ham_dx1 = 
-      //1.*(e1 + 0.5*m*pow(r - rp1,2)*pow(w1,2))*x1 + 
-       //(1.*v12*x1*(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2)))*
-          //cos(atan2(p1,x1) - atan2(p2,x2)))/
-        //sqrt((0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-          //(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2)))) - 
-       //(2.*p1*v12*sqrt((0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-            //(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2))))*
-          //sin(atan2(p1,x1) - atan2(p2,x2)))/
-        //(pow(p1,2) + pow(x1,2));
-    //for (size_t i = 0; i < bw.size(); ++i) {
-      //auto pb = s[7+2*i];
-      //auto qb = s[8+2*i];
-      //d_sys_ham_dx1 += 1.*bc[i]*x1*(qb + (0.5*bc[i]*(-1 + pow(p1,2) + pow(x1,2)))/pow(bw[i],2));
-    //}
-    ds[4] = d_sys_ham_dx1;
-
-    //auto d_sys_ham_dp2 = 
-      //p2*(e2 + 0.5*m*pow(r - rp2,2)*pow(w2,2)) + 
-       //(1.*p2*v12*(0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-          //cos(atan2(p1,x1) - atan2(p2,x2)))/
-        //sqrt((0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-          //(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2)))) - 
-       //(2.*v12*x2*sqrt((0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-            //(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2))))*
-          //sin(atan2(p1,x1) - atan2(p2,x2)))/
-        //(pow(p2,2) + pow(x2,2));
-    ds[5] = d_sys_ham_dp2;
-
-    //auto d_sys_ham_dx2 = 
-      //1.*(e2 + 0.5*m*pow(r - rp2,2)*pow(w2,2))*x2 + 
-       //(1.*v12*(0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*x2*cos(atan2(p1,x1) - atan2(p2,x2)))/
-        //sqrt((0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-          //(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2)))) + 
-       //(2.*p2*v12*sqrt((0.5 + 0.5*(-1. + pow(p1,2) + pow(x1,2)))*
-            //(0.5 + 0.5*(-1. + pow(p2,2) + pow(x2,2))))*sin(atan2(p1,x1) - atan2(p2,x2)))/
-        //(pow(p2,2) + pow(x2,2));
-    ds[6] = d_sys_ham_dx2;
-
-    //for (size_t i = 0; i < bw.size(); ++i) {
-      //auto pb = s[7+2*i];
-      //auto qb = s[8+2*i];
-      //auto d_sys_ham_dpb = pb;
-      //auto d_sys_ham_dqb = 1.*pow(bw[i],2)*(qb + (0.5*bc[i]*(-1 + pow(p1,2) + pow(x1,2)))/pow(bw[i],2));
-      //ds[7+2*i] = d_sys_ham_dpb;
-      //ds[8+2*i] = d_sys_ham_dqb;
-    //}
-
-    return ds;
-  }
+  vector<double> operator() (const vector<double> &s) ;
   double d_u1_dr(double r) { 
     return m*w1*w1*(r-rp1);
   }
