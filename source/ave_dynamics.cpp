@@ -21,6 +21,8 @@
 #include "traj_step.hpp"
 #include "ave_dyn_step.hpp"
 
+#include "o.hpp"
+
 std::tuple<
   std::vector<std::vector<double>> ,
   std::vector<std::vector<double>> 
@@ -48,11 +50,13 @@ ave_dynamics(
   double dt = tp["time_step"];
   auto my_traj_step = traj_step{dt,my_energy,my_eom};
 
+  rmkdir("int_states");
+  rmkdir("energies");
   vector<double>  time;
   copy(irange(0,static_cast<int>(tp["n_times"])) | transformed( [dt](double itime ){return itime*dt;}),back_inserter(time)); ///> make a vector of times
   vvd ave_traj(time.size()), ave_n(time.size());
   transform( time, make_zip_iterator( boost::make_tuple(begin(ave_traj),begin(ave_n))), 
-      ave_dyn_step{states,my_traj_step,ip,mp}
+      ave_dyn_step{states,my_energy,my_traj_step,ip,mp}
       );
 
   ofstream ofan("ave_n.dat");

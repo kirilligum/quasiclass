@@ -106,7 +106,7 @@ add_executable(../main
 #target_link_libraries(main ${Boost_LIBRARIES} ${GOBJECT_LIBRARIES} )
 #target_link_libraries(../main ${LUA_LIBRARIES} ${Boost_LIBRARIES} ${GOBJECT_LIBRARIES} -lntl -lm -lgmp -llua5.1)
 #target_link_libraries(../main ${LUA_LIB} ${BOOST_LIB} ${GOBJECT_LIBRARIES}  -L/global/homes/k/kirillig/modules/lua/5.2.2/lib -dynamic -llua -ldl -lm)
-target_link_libraries(../main ${LUA_LIB} ${BOOST_LIB} ${GOBJECT_LIBRARIES}  -dynamic -llua -ldl -lm)
+target_link_libraries(../main ${LUA_LIB} ${BOOST_LIB} ${GOBJECT_LIBRARIES}  -dynamic -llua -ldl -lm  -L/usr/common/usg/boost/1.54/gnu/lib -lboost_filesystem -lboost_system -lboost_mpi -lboost_serialization)
 #target_link_libraries(../main ${LUA_LIBRARIES} ${Boost_LIBRARIES} ${GOBJECT_LIBRARIES} ${MPI_LIBRARIES} -lboost_mpi -lboost_serialization)
 
 

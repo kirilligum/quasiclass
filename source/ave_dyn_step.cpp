@@ -12,6 +12,7 @@
 #include <boost/range/numeric.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/irange.hpp>
+//#include <boost/filesystem.hpp>
 
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/range.hpp>
@@ -34,8 +35,15 @@ void trajs_step( std::vector<std::vector<double>> &states,
 boost::tuple<std::vector<double>,std::vector<double>> ave_dyn_step::operator()(double t) {
   int world_size; MPI_Comm_size(MPI_COMM_WORLD, &world_size);
   int world_rank; MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-  string ost = "int_states/"+to_string(world_rank)+".dat";
-  o(states,ost);
+  if(mp["print_energies"]==1){
+    for(auto i:states) {
+      ofstream ofi("energies/"+to_string(world_rank)+".dat",std::ios_base::app | std::ios_base::out);
+      ofi << i.front() << "  " << my_energy(i);
+      //copy(i, ostream_iterator<double>(ofi,"  "));
+      ofi<<"\n";
+    };
+  }
+  if(mp["print_int_states"]==1) o(states,"int_states/"+to_string(world_rank)+".dat");
   std::vector<double> ave_state = ave_over_states(states);
   std::vector<double> ave_nn = state_electronic_population(states,ip.at("n1"),ip.at("n2"),mp.at("bin_end"),mp.at("n_shift"));
   trajs_step(states, my_traj_step); ///> step

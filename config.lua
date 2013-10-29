@@ -185,11 +185,14 @@ seed = 1;
 n_shift = 0.35;
 bin_start = 0.35;
 bin_end = 0.35;
---n_trajs =1;
+n_trajs =1;
 --n_trajs =2;
-n_trajs = 20;
+--n_trajs = 20;
 --n_trajs = 500;
 --n_trajs = 2000;
+print_int_states = 0;
+print_energies = 0;
+
 
 -- dofile "config.lua"
 -- print(sys_k2,"\n",sys_ki,"\n",sys_k4,"\n",sys_m,"\n",sys_hb,"\n",s0)

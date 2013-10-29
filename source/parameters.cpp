@@ -27,7 +27,7 @@ get_param(const char *lua_config_filename) {
   auto tp = Lua_read(lua_config_filename).read_config(vector<string>{"n_times","end_time","time_step"});
   ofpara << "map of integration parameters: \n"; for(auto i: tp) ofpara<< setw(20) << i.first << " = " << i.second << "\n";
   
-  auto mp = Lua_read(lua_config_filename).read_config(vector<string>{"seed","n_shift","bin_start","bin_end","n_trajs"});
+  auto mp = Lua_read(lua_config_filename).read_config(vector<string>{"print_int_states", "print_energies","seed","n_shift","bin_start","bin_end","n_trajs"});
   ofpara << "map of method parameters: \n"; for(auto i: mp) ofpara<< setw(20) << i.first << " = " << i.second << "\n";
   
   return make_tuple(sp,ip,tp,mp);
